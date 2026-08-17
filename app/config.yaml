@@ -22,6 +22,20 @@ manifest:
       - "Share some usage patterns"
       - "Which agent is slowest, and is anything failing?"
 
+  ad-assessment-advisor:
+    description: "Prepara cenários de avaliação AD/DNS/PKI e gera payload/scripts para runner PowerShell separado."
+    quick_prompts:
+      - "Quero avaliar o domínio contoso.local com PKI"
+      - "Monte o payload para ad-assessment-run"
+      - "Mostre os scripts do último job"
+
+  ad-assessment-coordinator:
+    description: "Primeiro contato do assessment: entrevista o usuário, monta o escopo e delega automaticamente para workflow e handoff Jira/Scrum."
+    quick_prompts:
+      - "Quero iniciar um assessment AD"
+      - "Monte o escopo e já inicie o workflow"
+      - "Prepare também a GMUD em formato Jira/Scrum"
+
   # --- Workflows ---
 
   deployment-check:
@@ -33,3 +47,9 @@ manifest:
     description: "Run a subset of the eval suite."
     quick_prompts:
       - "Run the smoke evals"
+
+  ad-assessment-run:
+    description: "Run the AD/DNS (optionally PKI) assessment orchestrator and return report artifact paths."
+    quick_prompts:
+      - "Run AD assessment for test.com"
+      - '{"domain":"contoso.local","include_pki":true,"generate_mermaid":true}'

@@ -13,11 +13,14 @@ AgentOS  (app/main.py)
 ├── Chief        (agents/chief.py)        — team mascot: LearningMachine + notes + web tools
 ├── Platform Manager (agents/platform_manager.py) — WorkspaceContextProvider + AgentOSTools read-only ops toolkit + shared per-user profile/memory
 ├── Agent Builder (agents/agent_builder.py) — Agno docs MCP + StudioTools + shared per-user profile/memory
+├── AD Assessment Advisor (agents/ad_assessment_advisor.py) — prepares scenario payloads and runner-facing script locations for AD assessments
+├── AD Assessment Coordinator (agents/ad_assessment_coordinator.py) — first contact for assessment work: scopes the activity, asks the minimum questions, triggers the workflow, and prepares Jira/Scrum change handoff
 ├── DeployCheck  (workflows/deployment_check.py) — deterministic readiness workflow
 └── RunEvals     (workflows/run_evals.py) — opt-in eval suite workflow
 ```
 
 Shared:
+
 - PostgreSQL + pgvector for sessions, memory, knowledge.
 - All three reference agents wire the LearningMachine's per-user profile and memory stores over the shared DB — one human, one self across every agent. Entities and notes stay Chief's.
 - `app.settings.default_model()` returns `OpenAIResponses(id="gpt-5.6-sol")` — bump the model in one place.
@@ -31,7 +34,7 @@ Shared:
 ## Key Files
 
 | File | Purpose |
-|------|---------|
+| ------ | --------- |
 | [`app/main.py`](app/main.py) | AgentOS entrypoint — lifespan hook, conditional Slack, conditional MCP OAuth, JWT gate. |
 | [`app/settings.py`](app/settings.py) | `default_model()` factory. |
 | [`app/registry.py`](app/registry.py) | Safe Studio registry used by Agent Builder — docs MCP, web tools, utility functions, reference agents. |
@@ -39,7 +42,10 @@ Shared:
 | [`agents/chief.py`](agents/chief.py) | The team mascot — LearningMachine (profile, memory, entities in agentic mode) + FileSystem notes + web tools (Parallel SDK or keyless MCP); the Slack default agent. |
 | [`agents/platform_manager.py`](agents/platform_manager.py) | Flagship agent — codebase context provider + agno's `AgentOSTools` read-only ops toolkit (usage metrics, run and tool activity from traces, eval history, schedules and their run history, runtime-built components, pending approvals) + deployment-check reports with an on-demand diagnostic run. Wires the shared per-user profile/memory stores. |
 | [`agents/agent_builder.py`](agents/agent_builder.py) | Reference agent — creates, edits, and publishes agents, teams, and workflows through StudioTools immediately; only deletes keep a HITL confirmation gate. Wires the shared per-user profile/memory stores. |
+| [`agents/ad_assessment_advisor.py`](agents/ad_assessment_advisor.py) | Assessment-prep specialist — collects scope for AD/DNS/PKI runs and generates payloads/scripts for the separate PowerShell runner. |
+| [`agents/ad_assessment_coordinator.py`](agents/ad_assessment_coordinator.py) | Assessment front door — interviews the user, stores scoping preferences, starts `ad-assessment-run` automatically when possible, and prepares Jira/Scrum change handoff content. |
 | [`workflows/deployment_check.py`](workflows/deployment_check.py) | Reference workflow — a deterministic `Step` that checks DB, auth, scheduler URL, MCP reachability, Slack config, schedule state, and component imports; imported into `app/main.py` and passed to `AgentOS(workflows=[...])`. |
+| [`workflows/ad_assessment_run.py`](workflows/ad_assessment_run.py) | Production-safe assessment bridge — generates scenario artifacts and PowerShell scripts, verifies the llama runtime, and optionally calls a separate runner API. |
 | [`workflows/run_evals.py`](workflows/run_evals.py) | Optional workflow — runs a tagged subset of the eval suite and returns a compact report. Its daily schedule ships disabled — enable it from the AgentOS UI. |
 | [`app/schedules.py`](app/schedules.py) | `register_schedules()` — cron registration, called from the lifespan (idempotent, fail-soft). |
 | [`db/session.py`](db/session.py) | `get_postgres_db()`, `create_knowledge()`. |
@@ -189,7 +195,7 @@ Invoke a skill by name (`/extend-agent`) or just describe the task — Claude Co
 ## Environment Variables
 
 | Variable | Required | Default | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `OPENAI_API_KEY` | yes | — | OpenAI key for models + embeddings. |
 | `RUNTIME_ENV` | no | `prd` | `dev` disables JWT. `compose.yaml` sets it to `dev` for local; `compose.prod.yaml` sets `prd` — never hand-set `dev` on a production host, or the platform serves unauthenticated. |
 | `JWT_VERIFICATION_KEY` | prd | — | Public key from os.agno.com. Required when `RUNTIME_ENV=prd` and `authorization=True`, unless `JWT_JWKS_FILE` is set. |

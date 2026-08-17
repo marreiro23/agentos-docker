@@ -11,11 +11,14 @@ from agno.os import AgentOS
 from agno.utils.log import log_info
 
 from agents.agent_builder import agent_builder
+from agents.ad_assessment_advisor import ad_assessment_advisor
+from agents.ad_assessment_coordinator import ad_assessment_coordinator
 from agents.chief import chief
 from agents.platform_manager import platform_manager
 from app.registry import registry
 from app.schedules import register_schedules
 from db import get_postgres_db
+from workflows.ad_assessment_run import ad_assessment_run
 from workflows.deployment_check import deployment_check
 from workflows.run_evals import run_evals
 
@@ -96,8 +99,8 @@ agent_os = AgentOS(
     mcp_auth=mcp_auth,
     lifespan=lifespan,
     db=get_postgres_db(),
-    agents=[chief, agent_builder, platform_manager],
-    workflows=[deployment_check, run_evals],
+    agents=[chief, agent_builder, platform_manager, ad_assessment_advisor, ad_assessment_coordinator],
+    workflows=[deployment_check, run_evals, ad_assessment_run],
     interfaces=interfaces,
     registry=registry,
     config=str(Path(__file__).parent / "config.yaml"),

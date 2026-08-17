@@ -8,6 +8,7 @@ PostgreSQL connection helpers. Use:
 """
 
 from functools import cache
+from os import getenv
 
 from agno.db.postgres import PostgresDb
 from agno.knowledge import Knowledge
@@ -36,13 +37,21 @@ def get_postgres_db(contents_table: str | None = None) -> PostgresDb:
 
 def create_knowledge(name: str, table_name: str) -> Knowledge:
     """Creates a PgVector knowledge base with hybrid search."""
+    embedder_id = getenv("EMBEDDER_MODEL_ID", "text-embedding-3-small").strip()
+    embedder_base_url = getenv("EMBEDDER_BASE_URL", "").strip() or None
+    embedder_api_key = getenv("EMBEDDER_API_KEY", "").strip() or getenv("OPENAI_API_KEY", "").strip() or "sk-no-key-required"
+
     return Knowledge(
         name=name,
         vector_db=PgVector(
             db_url=db_url,
             table_name=table_name,
             search_type=SearchType.hybrid,
-            embedder=OpenAIEmbedder(id="text-embedding-3-small"),
+            embedder=OpenAIEmbedder(
+                id=embedder_id,
+                api_key=embedder_api_key,
+                base_url=embedder_base_url,
+            ),
         ),
         contents_db=get_postgres_db(contents_table=f"{table_name}_contents"),
     )
