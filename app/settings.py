@@ -23,7 +23,7 @@ def default_model():
         return OpenAILike(
             id=model_id,
             api_key=api_key,
-            base_url=base_url or "http://host.docker.internal:18080/v1",
+            base_url=base_url or "http://host.docker.internal:8080/v1",
         )
 
     # If a custom OpenAI-compatible base_url is provided, use chat-completions API

@@ -246,7 +246,7 @@ async def ad_assessment_run_step(step_input: StepInput) -> StepOutput:
     output_root = Path(getenv("AD_ASSESSMENT_OUTPUT_PATH", "/tmp/ad-assessment-output"))
 
     llama_base_url = getenv("LLAMA_BASE_URL", "http://llama:8080").rstrip("/")
-    llama_base_url_host = getenv("LLAMA_BASE_URL_HOST", "http://127.0.0.1:18080").rstrip("/")
+    llama_base_url_host = getenv("LLAMA_BASE_URL_HOST", "http://127.0.0.1:8080").rstrip("/")
     llama_models_url = f"{llama_base_url}/v1/models"
     llama_expected_image = getenv("LLAMA_CONTAINER_IMAGE", "oia-llama-full-cuda13-tools:local")
     llama_health_timeout = _as_int(getenv("LLAMA_HEALTH_TIMEOUT_SECONDS", "8"), default=8)
