@@ -54,7 +54,7 @@ networks:
   agentos:
   oia-runtime:
     external: true
-    name: oia-runtime_default
+    name: oia-runtime
 
 volumes:
   pgdata:
